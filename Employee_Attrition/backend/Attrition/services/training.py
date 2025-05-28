@@ -30,6 +30,7 @@ class Training:
         self.pickle_path = os.path.normpath(os.path.join(self.base_path, 'pickle', 'models'))
         self.metadata_path = os.path.normpath(os.path.join(self.base_path, 'pickle', 'model_metadata.json'))
         os.makedirs(self.pickle_path, exist_ok=True)
+        self.model_dir = self.pickle_path
         
         # Initialize model metadata file if it doesn't exist
         if not os.path.exists(self.metadata_path):
@@ -111,7 +112,7 @@ class Training:
     def save_model(self, model, feature_names, model_params, metrics):
         """Save model and metadata"""
         model_id = str(uuid.uuid4())
-        timestamp = datetime.now().isoformat()
+        timestamp = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
         
         # Model data to save
         model_data = {
@@ -148,15 +149,50 @@ class Training:
         logger.info(f"Model saved successfully as {model_filename}")
         return model_id
 
+    # def get_available_models(self):
+    #     """Get list of available models with their metadata"""
+    #     try:
+    #         with open(self.metadata_path, 'r') as f:
+    #             metadata = json.load(f)
+    #         return metadata.get('models', [])
+    #     except Exception as e:
+    #         logger.error(f"Error loading model metadata: {str(e)}")
+    #         return []
     def get_available_models(self):
         """Get list of available models with their metadata"""
         try:
             with open(self.metadata_path, 'r') as f:
                 metadata = json.load(f)
-            return metadata.get('models', [])
+
+            models = metadata.get('models', [])
+            if not isinstance(models, list):
+                logger.warning("Invalid metadata format: 'models' should be a list")
+                return []
+
+            available_models = []
+            for model in models:
+                # Assuming the filename is stored under 'filename'
+                model_file = model.get('filename')
+                if not model_file:
+                    logger.warning(f"Model entry missing 'filename': {model}")
+                    continue
+
+                model_path = os.path.join(self.model_dir, model_file)
+                if os.path.exists(model_path):
+                    available_models.append(model)
+                else:
+                    logger.warning(f"Model file not found: {model_file}")
+
+            return available_models
+
+        except FileNotFoundError:
+            logger.error("Metadata file not found at %s", self.metadata_path)
+        except json.JSONDecodeError:
+            logger.error("Failed to parse JSON from metadata file")
         except Exception as e:
-            logger.error(f"Error loading model metadata: {str(e)}")
-            return []
+            logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+
+        return []
 
     # def train(self, request):
     #     """Main training pipeline"""
