@@ -24,6 +24,12 @@ spec:
           mountPath: /app/pickle/models
         - name: app-logs
           mountPath: /app/log
+        - name: model-storage
+          mountPath: /app/data
+          subPath: db-data
+        env:
+        - name: DATABASE_PATH
+          value: "/app/data/db.sqlite3"
         resources:
           requests:
             cpu: 500m
