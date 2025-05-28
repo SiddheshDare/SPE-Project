@@ -8,22 +8,6 @@
     kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/config"
   
   tasks:
-  - name: Check if Minikube is running
-      command: minikube status
-      register: minikube_status
-      ignore_errors: yes
-      
-    - name: Start Minikube if not running
-      command: minikube start
-      when: minikube_status.rc != 0
-      
-    - name: Wait for Minikube to be ready
-      command: minikube status
-      register: minikube_ready
-      until: "minikube_ready.rc == 0 and 'host: Running' in minikube_ready.stdout and 'kubelet: Running' in minikube_ready.stdout"
-      retries: 30
-      delay: 10
-      
     - name: Delete previous resources
       ansible.builtin.shell: |
         kubectl --kubeconfig={{ kubeconfig }} delete hpa frontend-hpa backend-hpa -n employee-attrition --ignore-not-found=true
@@ -31,7 +15,7 @@
         kubectl --kubeconfig={{ kubeconfig }} delete deployment attrition-frontend attrition-backend -n employee-attrition --ignore-not-found=true
         kubectl --kubeconfig={{ kubeconfig }} delete configmap nginx-config -n employee-attrition --ignore-not-found=true
         kubectl --kubeconfig={{ kubeconfig }} delete pvc model-data-pvc app-logs-pvc -n employee-attrition --ignore-not-found=true
-        kubectl --kubeconfig={{ kubeconfig }} delete pv model-data-pv --ignore-not-found=true
+        #kubectl --kubeconfig={{ kubeconfig }} delete pv model-data-pv --ignore-not-found=true
       ignore_errors: yes
       
     - name: Apply namespace
