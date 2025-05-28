@@ -24,6 +24,8 @@ logging.basicConfig(
     filename=os.path.join(os.getcwd(), 'log', 'training.log'))
 logger = logging.getLogger(__name__)
 
+MODEL_STORAGE_PATH = os.environ.get('MODEL_STORAGE_PATH', '/app/pickle/models')
+
 class Training:
     def __init__(self):
         self.base_path = os.getcwd()
